@@ -114,15 +114,8 @@
             <div class="flex-1 flex justify-center md:justify-end items-end relative overflow-hidden md:overflow-visible mt-4 md:mt-0">
                  <!-- Image Container -->
                  <div class="w-[85%] md:w-[95%] max-w-[800px] relative translate-y-0 md:-translate-y-[5%] md:mr-[-5%] lg:mr-0 pointer-events-none flex justify-center items-end h-full pb-0">
-                   <img 
-                      id="intro-hero-img" 
-                      src="./tangseng.png" 
-                      alt="Tang Seng" 
-                      class="w-full h-auto drop-shadow-2xl object-contain max-h-[85vh]"
-                      onerror="this.style.display='none'; document.getElementById('intro-fallback').classList.remove('hidden');"
-                   >
-                   <!-- Fallback SVG Container (Hidden by default, shows if png missing) -->
-                   <div id="intro-fallback" class="hidden w-full h-full"></div>
+                   <!-- Direct SVG Injection target for consistency and removing the staff easily -->
+                   <div id="intro-hero" class="w-full h-full"></div>
                  </div>
             </div>
         </div>
@@ -151,8 +144,8 @@
            <div class="flex-1 flex flex-col items-center justify-center w-full h-full relative p-4">
               
               <!-- Main Row: Wukong - Board - Bajie -->
-              <!-- CHANGED: Increased top margin to mt-32 md:mt-56 to push it further down -->
-              <div class="flex flex-row items-end justify-center w-full max-w-5xl gap-2 md:gap-4 mt-32 md:mt-56">
+              <!-- CHANGED: Increased top margin to mt-40 md:mt-64 to push it even further down -->
+              <div class="flex flex-row items-end justify-center w-full max-w-5xl gap-2 md:gap-4 mt-40 md:mt-64">
                   
                   <!-- Sun Wukong (Left) -->
                   <!-- Flipped to face right (towards board) -->
@@ -211,9 +204,7 @@
                     <i data-lucide="upload" class="w-4 h-4"></i> 导入 Excel
                  </button>
                  <input type="file" id="file-input" class="hidden" accept=".xlsx, .xls">
-                 <button id="btn-clear" class="flex items-center gap-2 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg cursor-pointer border border-transparent hover:border-red-200">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i> 清空名单
-                 </button>
+                 <!-- Clear button removed as requested -->
               </div>
               
               <div class="text-sm font-bold text-gray-600">
@@ -247,8 +238,8 @@
       // --- CONSTANTS & SVGs ---
       const BGM_URL = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"; 
       
-      // Updated Tang Seng SVG (Removed Staff)
-      const SVG_TANGSENG_FALLBACK = `
+      // Updated Tang Seng SVG (NO STAFF)
+      const SVG_TANGSENG_NO_STAFF = `
         <svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg" class="w-full h-full filter drop-shadow-2xl">
           <defs>
             <linearGradient id="ts-face" x1="0" y1="0" x2="0" y2="1">
@@ -263,15 +254,9 @@
               <stop offset="0%" stop-color="#D32F2F"/>
               <stop offset="100%" stop-color="#8E0000"/>
             </linearGradient>
-            <radialGradient id="ts-jewel" cx="0.5" cy="0.5" r="0.5">
-               <stop offset="0%" stop-color="#00E5FF"/>
-               <stop offset="100%" stop-color="#006064"/>
-            </radialGradient>
           </defs>
           <g transform="translate(200, 280) scale(1.3)">
             
-            <!-- Staff REMOVED -->
-
             <!-- Body/Robe -->
             <path d="M-70 50 Q -90 180 0 180 Q 90 180 70 50 Z" fill="url(#ts-robe-inner)"/>
             <!-- Outer Kasaya -->
@@ -371,35 +356,34 @@
       let audio = null;
       let appState = 'IDLE'; // IDLE, ROLLING, SELECTED
 
-      // --- ELEMENTS ---
-      const els = {
-        introScreen: document.getElementById('intro-screen'),
-        activeScreen: document.getElementById('active-screen'),
-        studentModal: document.getElementById('student-modal'),
-        studentList: document.getElementById('student-list'),
-        activeCount: document.getElementById('active-count'),
-        totalCount: document.getElementById('total-count'),
-        fileInput: document.getElementById('file-input'),
-        nameDisplay: document.getElementById('name-display'),
-        celebrationText: document.getElementById('celebration-text'),
-        btnStop: document.getElementById('btn-stop'),
-        // Placeholders
-        introFallback: document.getElementById('intro-fallback'),
-        wukong: document.getElementById('wukong-placeholder'),
-        bajie: document.getElementById('bajie-placeholder'),
-      };
-
       // --- INITIALIZATION ---
       function init() {
+        // Init Elements Ref inside init to ensure DOM is ready
+        window.els = {
+          introScreen: document.getElementById('intro-screen'),
+          activeScreen: document.getElementById('active-screen'),
+          studentModal: document.getElementById('student-modal'),
+          studentList: document.getElementById('student-list'),
+          activeCount: document.getElementById('active-count'),
+          totalCount: document.getElementById('total-count'),
+          fileInput: document.getElementById('file-input'),
+          nameDisplay: document.getElementById('name-display'),
+          celebrationText: document.getElementById('celebration-text'),
+          btnStop: document.getElementById('btn-stop'),
+          introHero: document.getElementById('intro-hero'),
+          wukong: document.getElementById('wukong-placeholder'),
+          bajie: document.getElementById('bajie-placeholder'),
+        };
+
         // Audio
         audio = new Audio(BGM_URL);
         audio.loop = true;
         audio.volume = 0.5;
 
-        // Inject SVGs into fallback and active screen placeholders
-        els.introFallback.innerHTML = SVG_TANGSENG_FALLBACK;
-        els.wukong.innerHTML = SVG_WUKONG;
-        els.bajie.innerHTML = SVG_BAJIE;
+        // Inject SVGs
+        if(window.els.introHero) window.els.introHero.innerHTML = SVG_TANGSENG_NO_STAFF;
+        if(window.els.wukong) window.els.wukong.innerHTML = SVG_WUKONG;
+        if(window.els.bajie) window.els.bajie.innerHTML = SVG_BAJIE;
 
         // Icons
         lucide.createIcons();
@@ -411,9 +395,11 @@
         document.getElementById('btn-stop').onclick = stopRoll;
         document.getElementById('btn-close-modal').onclick = closeModal;
         document.getElementById('btn-confirm-modal').onclick = closeModal;
-        document.getElementById('btn-import').onclick = () => els.fileInput.click();
-        els.fileInput.onchange = handleFileUpload;
-        document.getElementById('btn-clear').onclick = clearList;
+        document.getElementById('btn-import').onclick = () => window.els.fileInput.click();
+        window.els.fileInput.onchange = handleFileUpload;
+        
+        // Removed btn-clear listener
+        
         document.getElementById('btn-select-all').onclick = () => toggleAll(true);
         document.getElementById('btn-select-none').onclick = () => toggleAll(false);
       }
@@ -421,34 +407,33 @@
       // --- LOGIC ---
 
       function updateNameDisplay(name) {
-        els.nameDisplay.textContent = name;
+        window.els.nameDisplay.textContent = name;
         if (name.length > 3) {
-            els.nameDisplay.classList.remove('text-6xl', 'md:text-8xl');
-            els.nameDisplay.classList.add('text-5xl', 'md:text-7xl');
+            window.els.nameDisplay.classList.remove('text-6xl', 'md:text-8xl');
+            window.els.nameDisplay.classList.add('text-5xl', 'md:text-7xl');
         } else {
-            els.nameDisplay.classList.remove('text-5xl', 'md:text-7xl');
-            els.nameDisplay.classList.add('text-6xl', 'md:text-8xl');
+            window.els.nameDisplay.classList.remove('text-5xl', 'md:text-7xl');
+            window.els.nameDisplay.classList.add('text-6xl', 'md:text-8xl');
         }
       }
 
       function updateVisualState() {
-        // App State effects
         if (appState === 'ROLLING') {
-            els.nameDisplay.className = els.nameDisplay.className.replace(/opacity-100 blur-0 scale-100|scale-110 drop-shadow-2xl/g, ' ');
-            els.nameDisplay.classList.add('opacity-80', 'blur-[2px]', 'scale-95');
-            els.celebrationText.classList.add('hidden');
-            els.btnStop.classList.remove('hidden');
+            window.els.nameDisplay.className = window.els.nameDisplay.className.replace(/opacity-100 blur-0 scale-100|scale-110 drop-shadow-2xl/g, ' ');
+            window.els.nameDisplay.classList.add('opacity-80', 'blur-[2px]', 'scale-95');
+            window.els.celebrationText.classList.add('hidden');
+            window.els.btnStop.classList.remove('hidden');
         } else if (appState === 'SELECTED') {
-            els.nameDisplay.className = els.nameDisplay.className.replace(/opacity-80 blur-\[2px\] scale-95/g, ' ');
-            els.nameDisplay.classList.add('opacity-100', 'blur-0', 'scale-110', 'drop-shadow-2xl');
-            els.celebrationText.classList.remove('hidden');
-            els.btnStop.classList.add('hidden');
+            window.els.nameDisplay.className = window.els.nameDisplay.className.replace(/opacity-80 blur-\[2px\] scale-95/g, ' ');
+            window.els.nameDisplay.classList.add('opacity-100', 'blur-0', 'scale-110', 'drop-shadow-2xl');
+            window.els.celebrationText.classList.remove('hidden');
+            window.els.btnStop.classList.add('hidden');
         } else {
             // IDLE
-            els.nameDisplay.className = els.nameDisplay.className.replace(/opacity-80 blur-\[2px\] scale-95|scale-110 drop-shadow-2xl/g, ' ');
-            els.nameDisplay.classList.add('opacity-100', 'blur-0', 'scale-100');
-            els.celebrationText.classList.add('hidden');
-            els.btnStop.classList.add('hidden');
+            window.els.nameDisplay.className = window.els.nameDisplay.className.replace(/opacity-80 blur-\[2px\] scale-95|scale-110 drop-shadow-2xl/g, ' ');
+            window.els.nameDisplay.classList.add('opacity-100', 'blur-0', 'scale-100');
+            window.els.celebrationText.classList.add('hidden');
+            window.els.btnStop.classList.add('hidden');
         }
       }
 
@@ -463,17 +448,14 @@
         appState = 'ROLLING';
         updateVisualState();
         
-        // Show Active Screen
-        els.introScreen.classList.add('hidden');
-        els.activeScreen.classList.remove('hidden');
+        window.els.introScreen.classList.add('hidden');
+        window.els.activeScreen.classList.remove('hidden');
 
-        // Play Music
         if (audio) {
             audio.currentTime = 0;
             audio.play().catch(e => console.warn(e));
         }
 
-        // Start Loop
         if (timer) clearInterval(timer);
         timer = setInterval(() => {
             const r = Math.floor(Math.random() * activeStudents.length);
@@ -509,8 +491,8 @@
         updateVisualState();
         updateNameDisplay("准备");
 
-        els.activeScreen.classList.add('hidden');
-        els.introScreen.classList.remove('hidden');
+        window.els.activeScreen.classList.add('hidden');
+        window.els.introScreen.classList.remove('hidden');
       }
 
       function triggerConfetti() {
@@ -527,21 +509,21 @@
 
       function openModal() {
         renderStudentList();
-        els.studentModal.classList.remove('hidden');
+        window.els.studentModal.classList.remove('hidden');
       }
 
       function closeModal() {
-        els.studentModal.classList.add('hidden');
+        window.els.studentModal.classList.add('hidden');
       }
 
       function renderStudentList() {
-        els.studentList.innerHTML = '';
+        window.els.studentList.innerHTML = '';
         const activeCount = students.filter(s => s.active).length;
-        els.activeCount.textContent = activeCount;
-        els.totalCount.textContent = students.length;
+        window.els.activeCount.textContent = activeCount;
+        window.els.totalCount.textContent = students.length;
 
         if (students.length === 0) {
-            els.studentList.innerHTML = `
+            window.els.studentList.innerHTML = `
                 <div class="col-span-full flex flex-col items-center justify-center text-gray-400 py-10">
                     <i data-lucide="upload" class="w-12 h-12 mb-2 opacity-50"></i>
                     <p>暂无学生，请导入 Excel 文件！</p>
@@ -574,26 +556,14 @@
             btn.appendChild(span);
             fragment.appendChild(btn);
         });
-        els.studentList.appendChild(fragment);
+        window.els.studentList.appendChild(fragment);
         lucide.createIcons();
       }
 
       function toggleAll(active) {
+        if (students.length === 0) return;
         students.forEach(s => s.active = active);
         renderStudentList();
-      }
-
-      function clearList() {
-        if (students.length === 0) {
-            alert("名单已经是空的了，无需清空。");
-            return;
-        }
-        
-        if (confirm("确定要清空所有学生名单吗？\n\n注意：此操作将删除所有数据，您需要重新导入。")) {
-            students = [];
-            if(els.fileInput) els.fileInput.value = '';
-            renderStudentList();
-        }
       }
 
       function handleFileUpload(e) {
@@ -618,13 +588,16 @@
                         }
                     });
 
-                    if (students.length === 0) {
+                    // MODIFIED: Always overwrite existing students with new list
+                    if (newStudents.length > 0) {
                         students = newStudents;
+                        alert(`成功导入 ${newStudents.length} 位学生，现有名单已更新。`);
                     } else {
-                        students = [...students, ...newStudents];
+                        alert("未在文件中找到有效的学生姓名。");
                     }
+                    
                     renderStudentList();
-                    els.fileInput.value = '';
+                    window.els.fileInput.value = '';
                 } catch (err) {
                     console.error(err);
                     alert("Excel 解析失败，请确保文件格式正确（例如：第一列为姓名）。");

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -237,6 +236,7 @@
     <script>
       // --- CONSTANTS & SVGs ---
       const BGM_URL = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"; 
+      const STORAGE_KEY = 'luckyroll_students_data_v1';
       
       // Updated Tang Seng SVG (NO STAFF)
       const SVG_TANGSENG_NO_STAFF = `
@@ -374,6 +374,9 @@
           wukong: document.getElementById('wukong-placeholder'),
           bajie: document.getElementById('bajie-placeholder'),
         };
+        
+        // Load data from localStorage if available
+        loadStudentsFromStorage();
 
         // Audio
         audio = new Audio(BGM_URL);
@@ -402,6 +405,29 @@
         
         document.getElementById('btn-select-all').onclick = () => toggleAll(true);
         document.getElementById('btn-select-none').onclick = () => toggleAll(false);
+      }
+      
+      // --- PERSISTENCE ---
+      function saveStudentsToStorage() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(students));
+        } catch (e) {
+          console.warn('LocalStorage save failed', e);
+        }
+      }
+
+      function loadStudentsFromStorage() {
+        try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              students = parsed;
+            }
+          }
+        } catch (e) {
+          console.warn('LocalStorage load failed', e);
+        }
       }
 
       // --- LOGIC ---
@@ -541,6 +567,7 @@
             }`;
             btn.onclick = () => {
                 student.active = !student.active;
+                saveStudentsToStorage(); // Save on toggle
                 renderStudentList();
             };
 
@@ -563,6 +590,7 @@
       function toggleAll(active) {
         if (students.length === 0) return;
         students.forEach(s => s.active = active);
+        saveStudentsToStorage(); // Save on toggle all
         renderStudentList();
       }
 
@@ -591,6 +619,7 @@
                     // MODIFIED: Always overwrite existing students with new list
                     if (newStudents.length > 0) {
                         students = newStudents;
+                        saveStudentsToStorage(); // Save after import
                         alert(`成功导入 ${newStudents.length} 位学生，现有名单已更新。`);
                     } else {
                         alert("未在文件中找到有效的学生姓名。");
